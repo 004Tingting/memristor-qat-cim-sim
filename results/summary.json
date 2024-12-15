@@ -1,0 +1,22 @@
+{
+  "fp32": 0.9819,
+  "qat_ideal": 0.9792,
+  "qat_nonideal": 0.9847,
+  "qat_adc8": 0.9151,
+  "qat_adc4": 0.8182,
+  "adc_sweep_eval": {
+    "8": 0.9849,
+    "6": 0.9854,
+    "5": 0.983,
+    "4": 0.972,
+    "3": 0.9038
+  },
+  "meta": {
+    "seed": 42,
+    "epochs": 3,
+    "adc_epochs": 2,
+    "device": "cpu",
+    "minutes": 2.4,
+    "note": "E0-E2 from run_all.py first pass; E3+S from resume"
+  }
+}
