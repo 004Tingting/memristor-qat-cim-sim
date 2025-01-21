@@ -12,7 +12,19 @@ training for memristive in-memory computing** (PyTorch, CPU-friendly):
 Built on the framework framing of Krestinskaya, Zhang & Salama
 (arXiv:2307.03936) and the canonical QAT literature (References below).
 **All reported numbers are actual runs of this repository on one machine
-(CPU, fixed seed 42) — none are copied from any paper or CV.**
+(CPU, fixed seed 42) — none are copied from any paper.**
+
+## Results at a glance
+
+| Experiment (MNIST, 3 ep) | Test accuracy |
+|---|---|
+| fp32 baseline | 98.19 % |
+| QAT 4-bit W/A, ideal device | 97.92 % |
+| QAT 4-bit + device non-idealities | **98.47 %** |
+| ADC partial-sum 8-bit → **4-bit** (eval sweep) | 98.49 % → **97.20 %** |
+
+![Main experiments](results/fig_summary_bar.png)
+![ADC-resolution sweep](results/acc_vs_adc_bits.png)
 
 ## Results (MNIST, 3 epochs unless noted)
 
@@ -20,7 +32,7 @@ Built on the framework framing of Krestinskaya, Zhang & Salama
 |---|---|
 | fp32 baseline | 98.19% |
 | QAT 4-bit W/A, ideal device | 97.92% (−0.27 pt) |
-| QAT 4-bit W/A + device non-idealities | 98.47% (−0.28 pt vs fp32; the per-forward non-ideality injection acts as a regulariser) |
+| QAT 4-bit W/A + device non-idealities | 98.47% (+0.28 pt vs fp32; the per-forward non-ideality injection acts as a regulariser) |
 | ADC-aware training @ 8-bit partial sums (2 ep) | 91.51% |
 | ADC-aware training @ 4-bit partial sums (2 ep) | 81.82% |
 
@@ -42,7 +54,7 @@ numbers are kept as-is.
 - **Bit-width sweep** (QAT + non-idealities, 3 ep each):
   8-bit 98.57 → 6-bit 98.47 → 5-bit 98.24 → **4-bit 98.47** → 3-bit 97.47 → 2-bit 90.04 %.
   Accuracy is flat down to 4-bit and only degrades meaningfully at 3 bits —
-  the 4-bit operating point of the CV claim sits on a wide plateau, not a cliff.
+  the 4-bit operating point sits on a wide plateau, not a cliff.
 - **Non-ideality intensity sweep** (4-bit, programming-noise rel_std 0→10 %):
   98.35 → 98.32 → 97.90 → 97.94 %. Only ~0.4 pt loss at 10 % noise — the
   per-forward non-ideality injection makes training robust to device noise
@@ -50,22 +62,17 @@ numbers are kept as-is.
 - **Training curves**: all three main configs converge smoothly; by epoch 3 the
   QAT+non-idealities run is within noise of the fp32 baseline.
 
-**Conclusion — 提升 or 降低?** Neither is a loss: against the fp32 baseline the
-4-bit QAT model with device non-idealities is **flat to slightly positive**
-(98.47 vs 98.19 % — the injection acts as a regulariser), the bit-width plateau
-extends down to 4 bits, and the ADC can drop to 4 bits at <1 pt cost. The
-quantisation story is "near-lossless down to 4-bit", which is exactly the
-claim the CV makes.
+**Conclusion.** Against the fp32 baseline the 4-bit QAT model with device
+non-idealities is flat to slightly positive (98.47 vs 98.19 % — the injection
+acts as a regulariser), the bit-width plateau extends down to 4 bits, and the
+ADC can drop to 4 bits at <1 pt cost: the 4-bit operating point is
+**near-lossless**.
 
-## Figures (results/)
+## Sweep figures
 
-| Figure | Content |
-|---|---|
-| `fig_summary_bar.png` | main experiments at a glance |
-| `fig_training_curves.png` | per-epoch val accuracy, fp32 vs QAT variants |
-| `fig_bits_sweep.png` | accuracy vs W/A bit width (4-bit plateau) |
-| `fig_noise_sweep.png` | accuracy vs non-ideality intensity |
-| `acc_vs_adc_bits.png` | ADC-resolution sweep (eval-time + ADC-aware) |
+![Training curves](results/fig_training_curves.png)
+![Bit-width sweep](results/fig_bits_sweep.png)
+![Non-ideality intensity sweep](results/fig_noise_sweep.png)
 
 ## Layout
 
@@ -75,18 +82,21 @@ src/nonideal.py     device non-ideality models (per-forward, stochastic)
 src/adc.py          CrossbarLinear: grouped partial sums + ADC quant (STE) + calibration
 src/models.py       MNIST CNN (identical topology for fp32 and QAT runs)
 src/engine.py       train/eval loops, ADC sweep
-experiments/run_all.py   single entry point, writes results/
-refs/               source papers (see below)
+experiments/run_all.py      main experiments + ADC sweep
+experiments/run_sweeps.py   bit-width / non-ideality sweeps
+experiments/make_figures.py figure generation
 ```
 
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
-python experiments/run_all.py     # ~30 min on CPU; writes results/summary.md + figures
+python experiments/run_all.py       # main experiments + ADC sweep
+python experiments/run_sweeps.py    # bit-width / non-ideality sweeps
+python experiments/make_figures.py  # regenerate all figures
 ```
 
-## References (all included in `refs/`)
+## References
 
 1. Krestinskaya, Zhang, Salama — *Towards Efficient In-memory Computing Hardware for
    Quantized Neural Networks*, arXiv:2307.03936 (2023)
@@ -100,7 +110,8 @@ python experiments/run_all.py     # ~30 min on CPU; writes results/summary.md + 
    Nature 2020 (s41586-020-1942-4)
 6. Prezioso et al. — *Training and operation of an integrated neuromorphic network
    based on metal-oxide memristors*, Nature 2015 (nature14441)
-7. Two further CIM mixed-precision quantization papers in `refs/`
+7. Two further CIM mixed-precision quantization papers (see refs list in the
+   reproduction notes)
 
 ## Origin & scope
 
