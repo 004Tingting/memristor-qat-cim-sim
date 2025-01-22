@@ -115,11 +115,12 @@ python experiments/make_figures.py  # regenerate all figures
 
 ## Origin & scope
 
-This repository is an independent, from-scratch reimplementation released out
-of a memristive in-memory computing on-chip training study (2024–2025). It
-contains none of the original project's code or data; everything here was
-built for the public release and every number above is reproducible from this
-repository alone.
+This study (2024–2025) was part of a memristive in-memory computing on-chip
+training effort. **This repository is the publicly releasable portion of my
+work in that effort**: an independent, from-scratch reimplementation of the
+training methodology, released for reproducibility. It contains none of the
+original project's code or data; everything here was built for the public
+release and every number above is reproducible from this repository alone.
 
 ## Future work
 
